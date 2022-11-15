@@ -1,0 +1,43 @@
+pipeline {
+    agent {
+        label 'jenkins-agent'
+    }
+    //TODO("Lab 4 - Artifact Management"): add environment variables
+    stages {
+        stage('Application repository') {
+            steps {
+                echo "Cloning application repository"
+                //TODO("Lab 3 - Introduction to Automated Builds"): add github url
+                sh 'git clone https://github.com/xlBuckExpresslx/afs-labs-student.git'
+                //TODO("Lab 4 - Artifact Management"): add COMMIT_HASH variable
+            }
+        }
+        stage('Application docker build') {
+            steps {
+                echo "Building application image"
+                //TODO("Lab 4 - Artifact Management"): build the docker app image
+            }
+            //TODO("Lab 4 - Artifact Management"): clean local docker app image
+        }
+        stage('Database docker build') {
+            steps {
+                echo "Building database image"
+                //TODO("Lab 4 - Artifact Management"): build the docker db image
+            }
+            //TODO("Lab 4 - Artifact Management"): clean local docker db image
+        }
+        //TODO("Lab 7 - Automated Security Scans"): add a stage
+        stage('Deploy') {
+            steps {
+                echo "Deployment stage"
+                //TODO("Lab 5 - Deploy to EKS"): deploy docker images
+            }
+        }
+    }
+    post {
+        cleanup {
+            echo "Clean workspace"
+            sh 'rm -rf .git ./*'
+        }
+    }
+}

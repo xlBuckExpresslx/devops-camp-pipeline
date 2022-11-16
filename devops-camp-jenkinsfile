@@ -2,6 +2,13 @@ pipeline {
     agent {
         label 'jenkins-agent'
     }
+    environment {
+        PIPELINE_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        HARBOR_REGISTRY = 'harbor.dev.afsmtddso.com'
+        HARBOR_PROJECT = 'jcooper-harbor-project'
+        APP_IMAGE_NAME = 'app'
+        DB_IMAGE_NAME = 'db'
+    }
     //TODO("Lab 4 - Artifact Management"): add environment variables
     stages {
         stage('Application repository') {
@@ -10,21 +17,70 @@ pipeline {
                 //TODO("Lab 3 - Introduction to Automated Builds"): add github url
                 sh 'git clone https://github.com/xlBuckExpresslx/afs-labs-student.git'
                 //TODO("Lab 4 - Artifact Management"): add COMMIT_HASH variable
+                dir('afs-labs-student') {
+                    script {
+                        env.COMMIT_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    }
+                }
             }
         }
         stage('Application docker build') {
             steps {
                 echo "Building application image"
                 //TODO("Lab 4 - Artifact Management"): build the docker app image
+                withCredentials([usernameColonPassword(credentialsId: 'jcooper-harbor-auth', variable: 'HARBOR-AUTH')]) {
+                    script {
+                        sh 'docker build -t $APP_IMAGE_NAME-$COMMIT_HASH -f ./app/Dockerfile ./afs-labs-student'
+                        docker.withRegistry('https://$HARBOR_REGISTRY', 'jcooper-harbor-auth') {
+                            sh 'docker tag $APP_IMAGE_NAME-$COMMIT_HASH $HARBOR_REGISTRY/$HARBOR_PROJECT/$APP_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'
+                            sh 'docker push $HARBOR_REGISTRY/$HARBOR_PROJECT/$APP_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'
+                        }
+                    }
+                }
             }
             //TODO("Lab 4 - Artifact Management"): clean local docker app image
+            post {
+                always {
+                    echo "Clean local $APP_IMAGE_NAME image"
+                    script {
+                        try {
+                            sh 'docker rmi $APP_IMAGE_NAME-$COMMIT_HASH:latest'
+                            sh 'docker rmi $HARBOR_REGISTRY/$HARBOR_PROJECT/$APP_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'                            
+                        } catch (err) {
+                            echo err.getMessage()
+                        }
+                    }
+                }
+            }
         }
         stage('Database docker build') {
             steps {
                 echo "Building database image"
                 //TODO("Lab 4 - Artifact Management"): build the docker db image
+                withCredentials([usernameColonPassword(credentialsId: 'jcooper-harbor-auth', variable: 'HARBOR-AUTH')]) {
+                    script {
+                        sh 'docker build -t $DB_IMAGE_NAME-$COMMIT_HASH -f ./db/Dockerfile ./afs-labs-student'
+                        docker.withRegistry('https://$HARBOR_REGISTRY', 'jcooper-harbor-auth') {
+                            sh 'docker tag $DB_IMAGE_NAME-$COMMIT_HASH $HARBOR_REGISTRY/$HARBOR_PROJECT/$DB_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'
+                            sh 'docker push $HARBOR_REGISTRY/$HARBOR_PROJECT/$DB_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'
+                        }
+                    }
+                }
             }
             //TODO("Lab 4 - Artifact Management"): clean local docker db image
+            post {
+                always {
+                    echo "Clean local $DB_IMAGE_NAME image"
+                    script {
+                        try {
+                            sh 'docker rmi $DB_IMAGE_NAME-$COMMIT_HASH:latest'
+                            sh 'docker rmi $HARBOR_REGISTRY/$HARBOR_PROJECT/$DB_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'                            
+                        } catch (err) {
+                            echo err.getMessage()
+                        }
+                    }
+                }
+            }
         }
         //TODO("Lab 7 - Automated Security Scans"): add a stage
         stage('Deploy') {

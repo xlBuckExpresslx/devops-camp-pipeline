@@ -61,7 +61,6 @@ pipeline {
                       }
                   }
               }
-           }
               //Scan the Docker images
               stage('Security scanning') {
                   steps {
@@ -71,6 +70,7 @@ pipeline {
                   }
             }
           }
+           }
         }
               stage('Deploy') {
                   steps {

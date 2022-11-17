@@ -87,6 +87,8 @@ pipeline {
             steps {
                 echo "Deployment stage"
                 //TODO("Lab 5 - Deploy to EKS"): deploy docker images
+                sh 'kubectl -n jcooper set image deployment/app-deployment app-deployment=$HARBOR_REGISTRY/$HARBOR_PROJECT/$APP_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'
+                sh 'kubectl -n jcooper set image deployment/db-deployment db-deployment=$HARBOR_REGISTRY/$HARBOR_PROJECT/$DB_IMAGE_NAME:$COMMIT_HASH-$PIPELINE_HASH'
             }
         }
     }

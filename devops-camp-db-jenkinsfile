@@ -10,8 +10,8 @@ pipeline {
         DB_IMAGE_NAME = 'db'
     }
     stages {
-    //TODO: add stages to pipeline
-    stage('Application repository') {
+        //TODO: add stages to pipeline
+        stage('Application repository') {
             steps {
                 echo "Cloning application repository"
                 sh 'git clone https://github.com/xlBuckExpresslx/afs-labs-student.git'
@@ -27,8 +27,7 @@ pipeline {
                 }
             }
         }
-    }
-    stage('DB changes: true') {
+        stage('DB changes: true') {
            when {
               environment name: 'BUILD_DB', value: 'true'
            }
@@ -71,6 +70,7 @@ pipeline {
               }
            }
         }
+    }
     post {
         cleanup {
             echo "Clean workspace"

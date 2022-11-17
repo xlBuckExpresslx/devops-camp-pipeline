@@ -61,7 +61,7 @@ pipeline {
                       }
                   }
               }
-               //Scan the Docker images
+              //Scan the Docker images
               stage('Security scanning') {
                   steps {
                       withCredentials([usernamePassword(credentialsId: 'jcooper-harbor-auth', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
